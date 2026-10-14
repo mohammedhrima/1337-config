@@ -1,46 +1,6 @@
-# 42-config
+# 1337-config
 
-**Your whole dev setup on any 42 workstation, in one command.**
-
-```text
-$ 42-login                      ...pick what you need, wait a minute, code.
-$ 42-logout                     ...everything pushed, the machine left clean.
-```
-
----
-
-## Install (1 minute)
-
-**1.** Add to `~/.zshrc`, at the end:
-
-```sh
-CONFIG="/goinfre/$USER/42-config"
-CONFIG_URL="https://github.com/mohammedhrima/42-config.git"
-export PATH="$CONFIG:$PATH"
-
-42-login()  { [ -d "$CONFIG" ] || git clone "$CONFIG_URL" "$CONFIG" || return 1; 42 login; eval "$(42 env)"; }
-42-logout() { 42 logout }
-
-[ -d "$CONFIG" ] && eval "$(42 env)"
-```
-
-**2.** Open a terminal, type `42-login`.
-
-**3.** The first time, `~/42.yml` is created from [42.example.yml](42.example.yml).
-Replace the `<…>` parts with yours (see the full example below).
-
-Needs `git`, `curl` and `/usr/bin/python3` with PyYAML: all already on 42 machines.
-
-| Command | |
-|---|---|
-| `42-login` / `42 login` | set up this session (`--all`: no questions) |
-| `42-logout` / `42 logout` | push everything, clean `/goinfre` |
-| `42 install flutter` | install a tool now (and what it needs) |
-| `42 env` | the exports `~/.zshrc` uses |
-
----
-
-## Why
+**Your whole dev setup on any 1337 workstation, in one command.**
 
 ```text
         workstation A                              workstation B (tomorrow)
@@ -48,84 +8,529 @@ Needs `git`, `curl` and `/usr/bin/python3` with PyYAML: all already on 42 machin
   │  $HOME      5 GB   follows   │          │  $HOME      the same one     │
   │  /goinfre  50 GB   wiped     │          │  /goinfre   empty            │
   └──────────────┬───────────────┘          └──────────────▲───────────────┘
-                 │  logout: push                           │  login: clone
+                 │  1337-logout: push                      │  1337-login: clone
                  ▼                                         │
   ┌────────────────────────────────────────────────────────┴──────────────┐
   │                    GitHub  ·  your private repos                      │
   └───────────────────────────────────────────────────────────────────────┘
 ```
 
-| | `$HOME` | `/goinfre` | GitHub |
-|---|---|---|---|
-| Size | 5 GB | 50+ GB | ∞ |
-| Follows you to another post | ✅ | ❌ | ✅ |
-| What `42` puts there | almost nothing | tools, caches, repos | everything you must not lose |
+**Contents:**
+[Install](#install) ·
+[1337-setup](#1337-setup) ·
+[GitHub sign-in](#github-sign-in) ·
+[Every day](#every-day) ·
+[1337-repo](#1337-repo) ·
+[What goes where](#what-goes-where) ·
+[Synced folders](#synced-folders) ·
+[Templates](#templates) ·
+[Keywords](#keywords) ·
+[Safe by design](#safe-by-design) ·
+[Troubleshooting](#troubleshooting)
 
 ---
 
-## A session
+## Install
 
-```text
-  42-login
-    ├─ pick       ☑ tools  ☑ caches  ☑ repos  ☑ extensions
-    ├─ install    tools        →  /goinfre/$USER/tools
-    ├─ link       ~/.cache …   →  /goinfre/$USER/realocated
-    └─ clone      repos        →  /goinfre/$USER/workspace    (every branch)
+Paste this in a terminal:
 
-  … you work …
-
-  42-logout
-    ├─ push       every repo, every branch, every tag  →  GitHub
-    ├─ unlink     the symlinks leave $HOME
-    └─ wipe       /goinfre/$USER, except docker/
+```sh
+git clone https://github.com/mohammedhrima/1337-config.git /goinfre/$USER/1337-config && /goinfre/$USER/1337-config/1337 setup && exec zsh
 ```
 
-At login you choose what this session needs:
+```text
+  git clone ──▶ /goinfre/$USER/1337-config        the runner (a single Python file)
+      │
+  1337 setup ──▶ asks you questions ──▶ ~/1337.yml        your settings
+      │                             └─▶ ~/.zshrc          the 1337-* commands
+      │
+  exec zsh ──▶ new shell: 1337-login, 1337-logout, 1337-repo, 1337-setup ready
+```
+
+You do this once. `$HOME` follows you, so every workstation has your settings
+and commands. After a logout wipes goinfre, `1337-login` clones the runner again.
+
+What setup adds at the end of `~/.zshrc` (it asks first; running it again
+replaces this block, never adds a second one):
+
+```sh
+# >>> 1337-config >>>
+# written by `1337 setup`, which rewrites everything between these two lines
+export PATH="/goinfre/$USER/1337-config:$PATH"
+1337-get()    { [ -d "/goinfre/$USER/1337-config" ] || git clone -q https://github.com/mohammedhrima/1337-config.git "/goinfre/$USER/1337-config"; }
+1337-setup()  { 1337-get && 1337 setup && eval "$(1337 env)"; }
+1337-login()  { 1337-get && 1337 login "$@"; eval "$(1337 env)"; }
+1337-logout() { 1337 logout; }
+1337-repo()   { 1337-get && 1337 repo "$@" && eval "$(1337 env)"; }
+[ -x "/goinfre/$USER/1337-config/1337" ] && eval "$(1337 env)"
+# <<< 1337-config <<<
+```
 
 ```text
-◆  tools  6 of 9
-│  ❯ ◼ code       $TOOLS/code               installed
-│    ◼ node       $TOOLS/node               installed
-│    ◼ uv         $TOOLS/uv
-│    ◻ android    $TOOLS/android
-│    ◻ flutter    $TOOLS/flutter            + ninja, android
-│    ◼ beekeeper  $TOOLS/beekeeper
+  1337-get       clone the runner into goinfre, if a logout wiped it
+  1337-login     1337-get, then 1337 login, then load the new PATH into this terminal
+  last line      every new terminal finds your tools
+```
+
+Needs `git`, `curl`, `/usr/bin/python3` with PyYAML: all on 1337 machines.
+
+---
+
+## 1337-setup
+
+```text
+┌   1337   setup
+│
+◇  Sign in to GitHub?                         ──▶ see GitHub sign-in below
+│  yes
+◇  GitHub username                            ──▶ your repos: github.com/<username>/…
+│  mohammedhrima
+◇  GitHub email, for your commits             ──▶ git config user.email, at every login
+│  you@mail.com
+◇  Relocate: $HOME folders moved to goinfre   ──▶ section relocated
+│  cache, npm, vscode, code-data …
+◇  Sync: $HOME folders kept in a private repo ──▶ section synced
+│  google-cache, vscode-config
+◇  Tools: offered at every login              ──▶ section tools
+│  code, node, uv
+◇  Extras                                     ──▶ optional login / logout steps
+│  docker
+◇  Add a repo? enter when done                ──▶ section repos (same as 1337-repo add)
+│  ura-lang
+│
+◆  files
+│  ✔ ~/1337.yml   written; the old one is ~/1337.yml.bak
+│  ✔ ~/.zshrc     has the 1337 commands
+◆  github
+│  ✔ ssh            GitHub knows your key
+│  ✔ google-cache   created on GitHub, private
+│  ✔ vscode-config  created on GitHub, private
+└  done. Next: 1337-login
+```
+
+Checkbox questions:
+
+```text
+◆  Tools: offered at every login  3 of 9
+│  ❯ ◼ code       VS Code
+│    ◼ node       Node.js and npm
+│    ◼ uv         Python, its versions and packages
+│    ◻ android    Android SDK
+│    ◻ flutter    Flutter and Dart        + ninja, android
 └  ↑/↓ move   space toggle   a all   enter confirm
 ```
 
+| Key | Does |
+|---|---|
+| `↑` `↓` (or `k` `j`) | move |
+| `space` | tick / untick |
+| `a` | tick all / none |
+| `enter` | confirm |
+| `Ctrl-C` | cancel, nothing written |
+
+**Run it again anytime.** Your current answers are already ticked, your repos
+are kept as they are, and the old file is saved as `~/1337.yml.bak`.
+
 ---
 
-## Keep your data in private repos
+## GitHub sign-in
 
-`/goinfre` is wiped, `$HOME` is tiny. So everything personal goes to a **private
-GitHub repo**, cloned at login and pushed at logout:
+Setup signs in to GitHub so it can create your private repos and add your SSH
+key. No password, no extra tool: you click a link.
 
 ```text
-  $HOME  (only symlinks)          /goinfre/$USER               GitHub  (private)
-
-  ~/.config/google-chrome  ───▶   browser/              ◀──▶   google-cache
-  ~/.config/Code/User      ───▶   vscode-config/        ◀──▶   vscode-config
-                                  workspace/my-project/ ◀──▶   my-project
+   terminal                         browser                          GitHub
+  ──────────                       ─────────                        ────────
+  1337-setup
+  open  https://github.com/login/device ──▶ page opens
+  code  ABCD-1234                          you type ABCD-1234 ──────▶ approve?
+  waiting…                                                            │ yes
+     ◀──────────────────────────────────────────────── token ─────────┘
+  ✔ signed in as mohammedhrima
+     │
+     └─▶ saved in ~/.config/1337/github-token   (only you can read it)
 ```
 
-| Private repo | Holds | `link` |
+| The token is used to | When |
+|---|---|
+| create google-cache and vscode-config, private | `1337-setup` |
+| create a missing synced repo, private | `1337-login`, without asking |
+| create a missing repo of yours, private | `1337-repo add` and `1337-login`, after asking |
+| add your SSH key to GitHub | `1337-setup` |
+| read your email, as the default answer | `1337-setup` |
+
+Say **no** to sign-in and setup still works: it prints a link for each repo to
+create by hand (`github.com/new?name=…&visibility=private`) and shows your SSH
+key to paste at `github.com/settings/ssh/new`.
+
+**SSH key:** repos are cloned and pushed over SSH.
+
+```text
+  ~/.ssh/id_ed25519.pub, id_ecdsa.pub or id_rsa.pub exists?
+     ├─ yes ─▶ use it
+     └─ no  ─▶ make ~/.ssh/id_ed25519
+                  │
+  GitHub knows it? (ssh -T git@github.com)
+     ├─ yes ─▶ ✔ done
+     └─ no  ─▶ signed in? ─ yes ─▶ added to GitHub for you
+                         └ no  ─▶ shown, with the link to paste it
+```
+
+---
+
+## Every day
+
+| Command | Does |
+|---|---|
+| `1337-login` | set up this session; asks what you need (`--all`: no questions) |
+| `1337-logout` | push everything, clean `/goinfre` |
+| `1337-repo add <repo>` | add a repo, clone it now ([below](#1337-repo)) |
+| `1337 install flutter` | install a tool now, with what it needs |
+| `1337-setup` | answer the questions again |
+| `1337` | list the commands |
+
+```text
+  1337-login                                     1337-logout
+  ──────────                                     ───────────
+  identity   git name and email                  chrome      quit Chrome
+  relocated  ~/.cache … ─▶ goinfre    ☑ pick     vscode      quit VS Code
+  tools      install code, node …     ☑ pick     extensions  save the list of VS Code extensions
+  chrome     quit Chrome, first time only        push        commit + push synced and repos
+  vscode     quit VS Code, first time only       unlink      remove the symlinks from $HOME
+  synced     clone + link Chrome, VS Code        docker      stop docker, delete its images
+  repos      clone your code          ☑ pick     wipe        empty /goinfre/$USER, except docker/
+  extensions install VS Code extensions ☑ pick
+```
+
+`☑ pick`: a checkbox question, everything ticked, `enter` to go on. Each step
+is in `~/1337.yml`, under `login:` and `logout:`, in this order.
+
+A step that fails stops the ones after it, unless it has `ignore_errors: true`.
+
+### What a login looks like
+
+```text
+┌   1337   login
+│
+◇  relocated
+│  cache, npm, vscode, code-data
+│
+│  ✔ cache  ~/.cache → /goinfre/you/relocated/.cache
+│  · npm    ~/.npm already linked
+│  ✔ relocated
+│
+◇  tools
+│  code, node, uv
+│
+│  ● code  installing                    ● = working
+│  ✔ code  installed                     ✔ = done
+│  · node  already installed             · = nothing to do
+│  ✔ tools
+│
+◆  synced
+│  ✔ google-cache   cloned
+│  ✔ google-cache   ~/.config/google-chrome → /goinfre/you/synced/google-cache
+│  ✔ synced
+│
+◇  repos
+│  ura-lang, paperdesk
+│
+│  ✔ ura-lang   up to date with origin
+│  ▲ paperdesk  branch dev not updated   ▲ = warning, goes on
+│  ✔ repos
+│
+└  login done
+```
+
+### What a logout looks like
+
+```text
+┌   1337   logout
+│
+◆  push
+│  ✔ google-cache   pushed as a single commit
+│  ✔ vscode-config  pushed
+│  ✔ ura-lang       pushed
+│  · paperdesk      nothing new to push
+│  ▲ ~/…/workspace/test  is a git repo that ~/1337.yml does not list: it is not pushed
+│  ✔ push
+│
+◆  unlink
+│  ✔ cache  ~/.cache unlinked
+│  ✔ unlink
+│
+◆  wipe
+│  ✔ wipe
+│
+└  logout done
+```
+
+If a push fails, logout stops before `wipe`: nothing is lost.
+
+```text
+◆  push
+│  ✖ ura-lang  your commits conflict with origin's; the rebase was undone, merge them by hand
+│  ✖ push failed
+│
+└  logout stopped at push                ✖ = failed: fix it, run 1337-logout again
+```
+
+### 1337 install
+
+Install a tool in the middle of a session. What it `needs` comes first.
+
+```text
+  1337 install flutter
+
+  flutter ──needs──▶ ninja      installed first
+          └─needs──▶ android    installed first
+  then flutter
+
+  1337 install            no name: the tools checkbox
+  1337 install --all      every tool, no question
+```
+
+New tools are on `PATH` in new terminals. In this one: `eval "$(1337 env)"`.
+
+### 1337 env
+
+Prints the variables and `PATH` from `~/1337.yml`. Your `~/.zshrc` runs it at
+every new terminal, so tools are found.
+
+```text
+$ 1337 env
+export GITHUB_USER=mohammedhrima
+export GOINFRE=/goinfre/mhrima
+export TOOLS=/goinfre/mhrima/tools
+export ANDROID_HOME=/goinfre/mhrima/tools/android
+export PATH=/goinfre/mhrima/tools/code/bin:/goinfre/mhrima/tools/node/bin:…
+```
+
+---
+
+## 1337-repo
+
+Add a repo without editing `~/1337.yml`. **No link needed**: its name is enough.
+
+| You type | Means | Written as `source:` |
 |---|---|---|
-| `google-cache` | Chrome bookmarks, history, passwords, cookies | `~/.config/google-chrome` |
-| `vscode-config` | VS Code `settings.json`, keybindings, snippets, `extensions.txt` | `~/.config/Code/User` |
-| your projects | your code, every branch | none |
+| `1337-repo add ura-lang` | your repo | `git@github.com:<you>/ura-lang.git` |
+| `1337-repo add OussamaDX/pharmaflow` | someone else's | `git@github.com:OussamaDX/pharmaflow.git` |
+| `1337-repo add https://github.com/OussamaDX/pharmaflow` | link from the browser | `git@github.com:OussamaDX/pharmaflow.git` |
+| `1337-repo add git@github.com:you/x.git` | SSH URL | the same |
+| `1337-repo add https://gitlab.com/you/x.git` | another host | kept as it is |
+| `1337-repo add a b c` | several | one entry each |
 
-**Make one:** create an empty **private** repo on GitHub (no README, nothing in
-it), add it under `repos:`, then `42-login`.
+`<you>` is your GitHub username from setup. GitHub links become SSH URLs, so
+the push at logout needs no password.
 
 ```text
-  first 42-login     the empty repo takes in what is already in the link folder
-                     (your current Chrome profile, your VS Code settings)
-  first 42-logout    pushed to GitHub, on branch main
-  any workstation    42-login brings it back
+  1337-repo add ura-lang
+     │
+     ├─▶ ~/1337.yml   repos:
+     │                    ura-lang:
+     │                        source: git@github.com:<you>/ura-lang.git
+     │                        dest: $WORKSPACE/ura-lang
+     │
+     ├─▶ on GitHub?   ── no, and it is yours ──▶ "Create it, private?" (when signed in)
+     │
+     └─▶ cloned now   /goinfre/$USER/workspace/ura-lang, every branch
 ```
+
+```text
+$ 1337-repo
+┌   1337   repos
+│
+│  · ura-lang   git@github.com:mohammedhrima/ura-lang.git   cloned
+│  · paperdesk  git@github.com:mohammedhrima/paperdesk.git
+└  add one: 1337-repo add <name | owner/name | URL>
+```
+
+| Command | Does |
+|---|---|
+| `1337-repo` | list your repos, with `cloned` next to the ones on this machine |
+| `1337-repo add <repo>…` | add and clone |
+| `1337-repo remove <name>…` | take out of `~/1337.yml`; the clone stays, but is not pushed at logout |
+
+A name already used, or a change that would break `~/1337.yml`: refused,
+nothing changed. Your comments in the file are kept.
+
+---
+
+## What goes where
+
+```text
+  $HOME  (only symlinks)          /goinfre/$USER                GitHub (private)
+
+  ~/.cache, ~/.npm …      ───▶    relocated/                    —              emptied at logout
+                                  tools/code, node …            —              installed again at login
+  ~/.config/google-chrome ───▶    synced/google-cache    ◀──▶   google-cache
+  ~/.config/Code/User     ───▶    synced/vscode-config   ◀──▶   vscode-config
+                                  workspace/ura-lang     ◀──▶   ura-lang
+```
+
+| Section of `~/1337.yml` | Holds | After logout |
+|---|---|---|
+| `variables` | names used everywhere as `$NAME` | — |
+| `relocated` | big `$HOME` folders: caches | gone |
+| `tools` | programs | gone, installed again at login |
+| `synced` | `$HOME` folders you want back: Chrome profile, VS Code settings | on GitHub |
+| `repos` | your code, every branch and tag | on GitHub |
+| `login`, `logout` | the steps, in order | — |
+
+Files 1337 writes outside goinfre:
+
+| File | What |
+|---|---|
+| `~/1337.yml` | your settings |
+| `~/1337.yml.bak` | the previous one, after `1337-setup` |
+| `~/.zshrc` | the 1337 lines, between `# >>> 1337-config >>>` and `# <<< 1337-config <<<` |
+| `~/.config/1337/github-token` | the GitHub sign-in |
+| `~/.ssh/id_ed25519` | only when you had no SSH key |
+
+---
+
+## Synced folders
+
+A synced folder lives in a private repo. `$HOME` only holds a symlink to it.
+
+```text
+  first 1337-login       the repo is empty
+                         ~/.config/google-chrome (your current profile)
+                              └─ moves into ─▶ synced/google-cache
+                         .gitignore written: only the small files that matter
+                         ~/.config/google-chrome ─▶ symlink to it
+
+  1337-logout            committed and pushed to GitHub, on main
+
+  any workstation        1337-login clones it, links it: you are signed in again
+```
+
+| Synced item | Holds | Repo | Its `.gitignore` keeps out |
+|---|---|---|---|
+| `google-cache` | Chrome bookmarks, history, passwords, cookies | one commit, force-pushed (`squash: true`) | everything but 15 small files (not 1.8 GB of cache) |
+| `vscode-config` | VS Code `settings.json`, keybindings, snippets, `extensions.txt` | normal history | `workspaceStorage/`, `globalStorage/`, `History/`, `sync/` |
+
+Every state the repo can be in, at login:
+
+```text
+  repo on GitHub?
+   ├─ no ──▶ signed in? ─ yes ─▶ ✔ created, private, empty ─┐
+   │                    └ no  ─▶ ✖ link to create it shown   │   other repos go on
+   │                                                         │
+   ├─ yes, empty ◀───────────────────────────────────────────┘
+   │     ├─ $HOME folder there? ─▶ moved into the repo
+   │     ├─ .gitignore from `gitignore:` written
+   │     └─ setup (if any) waits for a first commit
+   │
+   └─ yes, with files
+         ├─ $HOME folder there? ─▶ moved next to it as <name>.replaced, until logout
+         └─ cloned, linked
+```
+
+At logout:
+
+| The repo… | `1337` |
+|---|---|
+| is still empty, nothing in it | `· nothing new to push`, logout goes on |
+| got its first files | first commit on `main`, pushed |
+| has changes | commit, push |
+| has nothing new | `· nothing new to push` (no push at all) |
+
+Chrome and VS Code are closed before their folder is linked or pushed, so
+their files are not half written. Setup warns if one of these repos is public.
+
+---
+
+## Templates
+
+Copy into `~/1337.yml`, under the section in the title.
 
 <details>
-<summary><b>The <code>.gitignore</code> for a Chrome profile repo</b> (keeps 54 small state files, not the 1.8 GB of cache)</summary>
+<summary><b>repos:</b> a repo (or just run <code>1337-repo add name</code>)</summary>
+
+```yaml
+    my-project:
+        source: git@github.com:you/my-project.git
+        dest: $WORKSPACE/my-project
+```
+
+Built after cloning, with the tools it needs:
+
+```yaml
+    my-extension:
+        source: git@github.com:you/my-extension.git
+        dest: $WORKSPACE/my-extension
+        needs:
+            - node
+        setup:
+            - npm install
+```
+
+</details>
+
+<details>
+<summary><b>tools:</b> a tool from a <code>.tar.gz</code></summary>
+
+```yaml
+    go:
+        source: https://go.dev/dl/go1.24.0.linux-amd64.tar.gz
+        dest: $TOOLS/go
+        path:
+            - $TOOLS/go/bin
+        env:
+            GOPATH: $RELOCATED/go
+        setup:
+            - curl -fL -o go.tar.gz "$SOURCE"
+            - tar -xzf go.tar.gz
+            - mv go "$DEST"
+```
+
+`setup` runs in an empty temporary folder and must create `$DEST`.
+
+</details>
+
+<details>
+<summary><b>relocated:</b> move a <code>$HOME</code> folder to goinfre</summary>
+
+```yaml
+    gradle:
+        link: $HOME/.gradle
+        dest: $RELOCATED/.gradle
+```
+
+</details>
+
+<details>
+<summary><b>synced:</b> keep a <code>$HOME</code> folder in a private repo</summary>
+
+```yaml
+    firefox-cache:
+        source: git@github.com:$GITHUB_USER/firefox-cache.git
+        dest: $SYNCED/firefox-cache
+        link: $HOME/.mozilla/firefox
+        squash: true                      # big binary files: keep one commit
+```
+
+Signed in, the next `1337-login` creates the repo on GitHub, private. Add
+`gitignore:` lines to keep big files out of it.
+
+</details>
+
+<details>
+<summary><b>login / logout:</b> a step of your own</summary>
+
+```yaml
+    wallpaper:
+        run:
+            - gsettings set org.gnome.desktop.background picture-uri "file://$HOME/wall.png"
+        ignore_errors: true
+```
+
+</details>
+
+<details>
+<summary><b>.gitignore</b> for a Chrome profile repo you made before (a new one gets it by itself)</summary>
 
 ```gitignore
 /*
@@ -151,356 +556,130 @@ it), add it under `repos:`, then `42-login`.
 
 </details>
 
+Every item and step, with comments: [1337.example.yml](1337.example.yml).
+
 ---
 
-## `~/42.yml`, a full real example
-
-Six sections. Every item and every step uses the same few keywords.
+## Keywords
 
 ```text
-variables   names usable everywhere as $NAME
-caches  ┐
-tools   ├── items:  source · dest · link · setup · path · env · needs · squash
-repos   ┘
-login   ┐
-logout  ┴── steps:  run · do · choose · options · message · ignore_errors
+  variables     NAME: value, used everywhere as $NAME
+  relocated ┐
+  tools     ├── items:  source · dest · link · setup · path · env · needs
+  synced    │           + squash · gitignore   (synced and repos)
+  repos     ┘
+  login     ┐
+  logout    ┴── steps:  run · do · choose · options · message · ignore_errors
 ```
 
-<details open>
-<summary><b>The complete file</b>: this is <a href="42.example.yml">42.example.yml</a>, copied to <code>~/42.yml</code> the first time. Replace the <code>&lt;…&gt;</code> parts with yours.</summary>
+Variables build on each other. Any value can use them, plus `$HOME` and `$USER`:
 
-```yaml
-# ~/42.yml - everything `42` does in a session.
-#
-# 42 only reads this file; edit it by hand. Any value can use $HOME, $USER and
-# the names defined under `variables`.
-#
-# caches, tools and repos are items. Every item uses the same keywords:
-#   source   where it comes from: a git URL (repos) or a download URL (tools)
-#   dest     where it lives on goinfre
-#   link     a $HOME path that is replaced by a symlink to dest
-#   setup    lines run once, right after dest was created ($SOURCE, $DEST are set)
-#   path     folders added to PATH
-#   env      variables exported to the shell
-#   needs    other items to set up first
-#   squash   repos only: keep a single commit, force-pushed
-#
-# login and logout are steps, run in order. Every step uses the same keywords:
-#   run            lines run as one bash script
-#   do             a built-in: install, link, clone, push or unlink
-#   choose         true: ask which items (or options) to use, with checkboxes
-#   options        lines that print the choices for a `run` step ($CHOSEN, $SKIPPED)
-#   message        the commit message for `do: push`
-#   ignore_errors  true: keep going when this step fails
+```text
+  GOINFRE:   /goinfre/$USER        ─▶  /goinfre/mhrima
+  TOOLS:     $GOINFRE/tools        ─▶  /goinfre/mhrima/tools
+  dest:      $TOOLS/node           ─▶  /goinfre/mhrima/tools/node
+```
 
-variables:
-    GOINFRE: /goinfre/$USER
-    TOOLS: $GOINFRE/tools
-    CACHE: $GOINFRE/realocated
-    WORKSPACE: $GOINFRE/workspace
-    GIT_NAME: <your name>                 # for your commits
-    GIT_EMAIL: <your email>
-    NODE_VERSION: 24.21.0
-    FLUTTER_VERSION: 3.47.5
-    BEEKEEPER_VERSION: 6.1.4
-    ANDROID_TOOLS_VERSION: 15859902
-    ANDROID_API: 36
+How one item works, the `node` tool:
 
-caches:
-    cache:
-        link: $HOME/.cache
-        dest: $CACHE/.cache
-    npm:
-        link: $HOME/.npm
-        dest: $CACHE/.npm
-    vscode:
-        link: $HOME/.vscode
-        dest: $CACHE/.vscode
-    vscode-shared:
-        link: $HOME/.vscode-shared
-        dest: $CACHE/.vscode-shared
-    copilot:
-        link: $HOME/.copilot
-        dest: $CACHE/.copilot
-    dotnet:
-        link: $HOME/.dotnet
-        dest: $CACHE/.dotnet
-    code-data:
-        link: $HOME/.config/Code
-        dest: $CACHE/.config/Code
-    uv-data:                              # pythons and tools installed by uv
-        link: $HOME/.local/share/uv
-        dest: $CACHE/.local/share/uv
-    gitkraken:
-        link: $HOME/.local/share/GitKrakenCLI
-        dest: $CACHE/.local/share/GitKrakenCLI
-    docker-data:                          # where docker writes when it ignores daemon.json
-        link: $HOME/.local/share/docker
-        dest: $CACHE/.local/share/docker
-
-tools:
-    code:
-        source: https://update.code.visualstudio.com/latest/linux-x64/stable
-        dest: $TOOLS/code
-        path:
-            - $TOOLS/code/bin
-        setup:
-            - curl -fL -o code.tar.gz "$SOURCE"
-            - tar -xzf code.tar.gz
-            - mv VSCode-linux-x64 "$DEST"
+```text
     node:
-        source: https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz
-        dest: $TOOLS/node
+        source: https://nodejs.org/…/node-v$NODE_VERSION-linux-x64.tar.xz   ─▶ $SOURCE
+        dest: $TOOLS/node                                                    ─▶ $DEST
         path:
-            - $TOOLS/node/bin
-        setup:
+            - $TOOLS/node/bin            ─▶ added to PATH
+        setup:                           ─▶ runs once, when $DEST does not exist yet
             - curl -fL -o node.tar.xz "$SOURCE"
             - tar -xJf node.tar.xz
             - mv node-v$NODE_VERSION-linux-x64 "$DEST"
-    uv:
-        source: https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz
-        dest: $TOOLS/uv
-        path:
-            - $TOOLS/uv
-        setup:
-            - curl -fL -o uv.tar.gz "$SOURCE"
-            - tar -xzf uv.tar.gz
-            - mv uv-x86_64-unknown-linux-gnu "$DEST"
-    ninja:
-        source: https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
-        dest: $TOOLS/ninja
-        path:
-            - $TOOLS/ninja
-        setup:
-            - curl -fL -o ninja.zip "$SOURCE"
-            - mkdir -p "$DEST"
-            - unzip -q ninja.zip -d "$DEST"
-    android:
-        source: https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_TOOLS_VERSION}_latest.zip
-        dest: $TOOLS/android
-        env:
-            ANDROID_HOME: $TOOLS/android
-            ANDROID_SDK_ROOT: $TOOLS/android
-            ANDROID_USER_HOME: $HOME/.android        # small: adbkey, so your phone remembers this computer
-            ANDROID_AVD_HOME: $TOOLS/android-home/avd  # big: emulator images stay on goinfre
-            GRADLE_USER_HOME: $TOOLS/gradle
-        path:
-            - $TOOLS/android/cmdline-tools/latest/bin
-            - $TOOLS/android/platform-tools
-        setup:
-            - curl -fL -o tools.zip "$SOURCE"
-            - unzip -q tools.zip
-            - mkdir -p "$DEST/cmdline-tools"
-            - mv cmdline-tools "$DEST/cmdline-tools/latest"
-            - (yes || true) | sdkmanager --licenses > /dev/null
-            - sdkmanager platform-tools "platforms;android-$ANDROID_API" "build-tools;$ANDROID_API.0.0"
-    emulator:                             # several GB; start it with: emulator -avd pixel_36 &
-        dest: $TOOLS/android/emulator
-        needs:
-            - android
-        path:
-            - $TOOLS/android/emulator
-        setup:
-            - IMAGE="system-images;android-$ANDROID_API;google_apis;x86_64"
-            - sdkmanager emulator "$IMAGE"
-            - echo no | avdmanager create avd -n pixel_$ANDROID_API -k "$IMAGE" --device pixel
-    flutter:
-        source: https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_$FLUTTER_VERSION-stable.tar.xz
-        dest: $TOOLS/flutter
-        needs:
-            - ninja
-            - android
-        env:
-            PUB_CACHE: $CACHE/.pub-cache
-        path:
-            - $TOOLS/flutter/bin
-        setup:
-            - curl -fL -o flutter.tar.xz "$SOURCE"
-            - tar -xJf flutter.tar.xz
-            - mv flutter "$DEST"
-    beekeeper:                            # start it with: beekeeper
-        source: https://github.com/beekeeper-studio/beekeeper-studio/releases/download/v$BEEKEEPER_VERSION/Beekeeper-Studio-$BEEKEEPER_VERSION.AppImage
-        dest: $TOOLS/beekeeper
-        path:
-            - $TOOLS/beekeeper/bin
-        setup:
-            - curl -fL -o app.AppImage "$SOURCE"
-            - chmod +x app.AppImage
-            - ./app.AppImage --appimage-extract > /dev/null
-            - mv squashfs-root "$DEST"
-            - mkdir "$DEST/bin"
-            - echo '#!/bin/sh' > "$DEST/bin/beekeeper"
-            - echo "setsid \"$DEST/AppRun\" \"\$@\" > /dev/null 2>&1 &" >> "$DEST/bin/beekeeper"
-            - chmod +x "$DEST/bin/beekeeper"
-    mouse:                                # keeps the session awake: mouse
-        dest: $TOOLS/mouse
-        path:
-            - $TOOLS/mouse
-        setup:
-            - mkdir "$DEST"
-            - echo '#!/bin/sh' > "$DEST/mouse"
-            - echo 'while true; do xdotool mousemove_relative -- 1 0; sleep 300; done' >> "$DEST/mouse"
-            - chmod +x "$DEST/mouse"
-
-repos:
-    my-project:                           # your code: cloned with every branch, pushed at logout
-        source: git@github.com:<you>/my-project.git
-        dest: $WORKSPACE/my-project
-    team-project:                         # someone else's repo works too
-        source: git@github.com:<teammate>/team-project.git
-        dest: $WORKSPACE/team-project
-    my-extension:                         # built after cloning, with the tools it needs
-        source: git@github.com:<you>/my-extension.git
-        dest: $WORKSPACE/my-extension
-        needs:
-            - code
-            - node
-        setup:
-            - make install
-    google-cache:                         # private: your Chrome profile, so you stay signed in
-        source: git@github.com:<you>/google-cache.git
-        dest: $GOINFRE/browser
-        link: $HOME/.config/google-chrome
-        squash: true                      # History is a big binary: keep one commit
-    vscode-config:                        # private: VS Code settings, keybindings, extensions.txt
-        source: git@github.com:<you>/vscode-config.git
-        dest: $GOINFRE/vscode-config
-        link: $HOME/.config/Code/User
-
-login:
-    identity:
-        run:
-            - git config --global user.name "$GIT_NAME"
-            - git config --global user.email "$GIT_EMAIL"
-    display:
-        run:
-            - xrandr --output eDP --mode 2560x1440
-            - gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32
-            - gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-            - gsettings set org.gnome.desktop.interface scaling-factor 0
-        ignore_errors: true
-    caches:                               # first, so tool setups already write into goinfre
-        do: link
-        choose: true
-    tools:
-        do: install
-        choose: true
-        ignore_errors: true             # a broken download must not stop your repos
-    chrome:                               # the first time, the google-cache link replaces Chrome's folder
-        run:
-            - '[ ! -L "$HOME/.config/google-chrome" ] || exit 0'
-            - pkill -x chrome || true
-            - for second in $(seq 20); do pgrep -x chrome > /dev/null || exit 0; sleep 1; done
-            - echo 'Chrome did not quit; close it, then try again'; exit 1
-    vscode:                               # the first time, the vscode-config link replaces VS Code's folder
-        run:
-            - '[ ! -L "$HOME/.config/Code/User" ] || exit 0'
-            - pgrep -x code > /dev/null || exit 0
-            - '[ "${TERM_PROGRAM:-}" != vscode ] || { echo "this terminal is part of VS Code, which has to quit: run it from another terminal"; exit 1; }'
-            - pkill -x code || true
-            - for second in $(seq 20); do pgrep -x code > /dev/null || exit 0; sleep 1; done
-            - echo 'VS Code did not quit; close it, then try again'; exit 1
-    repos:
-        do: clone
-        choose: true
-    extensions:
-        choose: true
-        options:
-            - cat "$GOINFRE/vscode-config/extensions.txt" 2> /dev/null || true   # none yet in a new repo: logout writes it
-        run:
-            - echo "$SKIPPED" > "$GOINFRE/.skipped-extensions"
-            - echo "$CHOSEN" | xargs -r -n1 code --install-extension
-        ignore_errors: true               # an extension built from a repo is not on the marketplace
-
-logout:
-    chrome:                               # quit Chrome cleanly: its profile is pushed below
-        run:
-            - pkill -x chrome || true
-            - for second in $(seq 20); do pgrep -x chrome > /dev/null || exit 0; sleep 1; done
-            - echo 'Chrome did not quit; close it, then try again'; exit 1
-    vscode:                               # quit VS Code: its settings are pushed below
-        run:
-            - pgrep -x code > /dev/null || exit 0
-            - '[ "${TERM_PROGRAM:-}" != vscode ] || { echo "this terminal is part of VS Code, which has to quit: run it from another terminal"; exit 1; }'
-            - pkill -x code || true
-            - for second in $(seq 20); do pgrep -x code > /dev/null || exit 0; sleep 1; done
-            - echo 'VS Code did not quit; close it, then try again'; exit 1
-    extensions:                           # the list becomes: installed + skipped at login
-        run:
-            - command -v code > /dev/null || exit 0
-            - '[ -d "$GOINFRE/vscode-config" ] || exit 0'
-            - installed=$(code --list-extensions)
-            - '[ -n "$installed" ] || exit 0'
-            - skipped=$(cat "$GOINFRE/.skipped-extensions" 2> /dev/null || true)
-            - printf '%s\n%s\n' "$installed" "$skipped" | sed '/^$/d' | sort -fu > "$GOINFRE/vscode-config/extensions.txt"
-    repos:
-        do: push
-        message: autosync on logout
-    unlink:
-        do: unlink
-    docker:
-        run:
-            - docker ps -q | xargs -r docker stop -t 10
-            - docker system prune -a -f --volumes
-        ignore_errors: true
-    wipe:
-        run:
-            - find "$GOINFRE" -mindepth 1 -maxdepth 1 ! -name docker -exec rm -rf {} +
 ```
 
-</details>
-
-### Item keywords
-
-| Keyword | Meaning | Example |
+| Item keyword | Means | Example |
 |---|---|---|
-| `source` | where it comes from | a download URL, a git URL |
+| `source` | where it comes from | download URL, git URL |
 | `dest` | where it lives on goinfre | `$TOOLS/node` |
-| `link` | a `$HOME` path replaced by a symlink to `dest` | `$HOME/.npm` |
-| `setup` | lines run once, right after `dest` is created (`$SOURCE`, `$DEST` set) | `make install` |
+| `link` | `$HOME` path replaced by a symlink to `dest` | `$HOME/.npm` |
+| `setup` | lines run once, after `dest` is made (`$SOURCE`, `$DEST` set) | `make install` |
 | `path` | folders added to `PATH` | `$TOOLS/node/bin` |
 | `env` | variables exported | `ANDROID_HOME: ...` |
-| `needs` | items set up first | flutter needs `ninja`, `android` |
-| `squash` | repos: one commit, force-pushed | the Chrome profile |
+| `needs` | items set up first | flutter needs `android` |
+| `squash` | one commit, force-pushed | Chrome profile |
+| `gitignore` | lines of the `.gitignore` a new, empty repo starts with | `- /workspaceStorage/` |
 
-### Step keywords
-
-| Keyword | Meaning |
+| Step keyword | Means |
 |---|---|
 | `run` | lines run as one bash script |
-| `do` | built-in: `install` · `link` · `clone` · `push` · `unlink` |
+| `do` | built-in: `link` (relocated) · `install` (tools) · `sync` (synced) · `clone` (repos) · `push` · `unlink` |
 | `choose` | `true`: ask with checkboxes |
-| `options` | for `run` + `choose`: lines printing the choices → `$CHOSEN`, `$SKIPPED` |
-| `message` | commit message for `do: push` |
+| `options` | with `run` + `choose`: lines printing the choices → `$CHOSEN`, `$SKIPPED` |
+| `message` | commit message of `do: push` |
 | `ignore_errors` | `true`: a failure does not stop the rest |
 
 ---
 
 ## Safe by design
 
-| At logout, a repo with… | `42` |
+What logout does with each repo:
+
+```text
+  stash, detached HEAD, or a merge half done? ── yes ─▶ ⛔ stop, nothing wiped
+     │ no
+  git add -A, commit "autosync on logout"
+     │
+  fetch, rebase on origin ── conflict ─▶ rebase undone ─▶ ⛔ stop, nothing wiped
+     │ ok
+  fast-forward the other branches that are only behind origin
+     │
+  push every branch and tag ── fails ─▶ ⛔ stop, nothing wiped
+     │ ok
+     ✔ ─▶ next repo … then unlink, then wipe
+```
+
+| At logout, a repo with… | `1337` |
 |---|---|
-| uncommitted changes | ✅ commits and pushes them |
-| a new local branch, new tags | ✅ pushes them |
+| uncommitted changes, new branches, tags | ✅ commits and pushes them |
 | a branch someone else pushed to | ✅ fast-forwards it, then pushes |
-| commits that conflict with origin | ⛔ stops, **nothing wiped**, repo left as it was |
-| stashes, a detached HEAD, a half-done merge | ⛔ stops, **nothing wiped** |
-| a git repo not listed in `42.yml` | ⚠️ warns: it will not be pushed |
+| nothing new (a teammate's repo you can only read) | ✅ no push, logout goes on |
+| an empty repo, still empty | ✅ no push, logout goes on |
+| commits that conflict with origin | ⛔ stops, **nothing wiped** |
+| changes in a repo you cannot push to | ⛔ stops, **nothing wiped**, says why |
+| stashes, detached HEAD, half-done merge | ⛔ stops, **nothing wiped** |
+| a git repo in `$WORKSPACE` not in `~/1337.yml` | ⚠️ warns: not pushed |
 
 | Also | |
 |---|---|
-| a mistake in `42.yml` | every problem listed, with where it is · nothing runs |
-| a tool download fails or Ctrl-C | the half-installed tool is removed · the next run retries |
-| `/goinfre/$USER/docker` | made by the staff for Docker · never deleted |
+| a mistake in `~/1337.yml` | every problem listed, nothing runs |
+| a failed download, or Ctrl-C | the half-installed tool is removed; the next login retries |
+| a synced repo missing on GitHub | created, private (signed in), or a link to create it |
+| a real folder where a synced folder goes | moved next to it as `<name>.replaced`, not deleted |
+| a folder inside a relocated one (`~/.config/Code/User`) | moved along, not deleted |
+| a synced folder that fails to clone | the other synced folders and your repos still go on |
+| a logout cut in the middle of a squash push | the next logout finishes it on the right branch |
+| `/goinfre/$USER/docker` | never deleted |
 
 ---
 
 ## Troubleshooting
 
+A mistake in `~/1337.yml` stops everything before it starts, with where it is:
+
+```text
+■  /home/you/1337.yml has 2 problems
+│  tools.node: missing 'dest'
+│  repos.ura-lang.needs: 'nodejs' is not an item in relocated, tools, synced, repos
+└  fix it and run 1337 again
+```
+
 | You see | Do |
 |---|---|
-| `command not found: 42` | add the snippet to `~/.zshrc`, open a new terminal |
-| `~/42.yml has N problems` | fix the lines it names |
-| a new tool is not found | `eval "$(42 env)"` or a new terminal |
-| `close Chrome first` | close Chrome (its profile is a repo being pushed) |
-| `branch x not updated` | you have commits origin doesn't: merge by hand |
+| `command not found: 1337-login` | open a new terminal, or paste the install line again |
+| `~/1337.yml does not exist yet` | `1337-setup` |
+| `~/1337.yml has N problems` | fix the lines it names |
+| a new tool is not found | `eval "$(1337 env)"`, or a new terminal |
+| `GitHub still refuses your key` | add `~/.ssh/id_*.pub` at github.com/settings/ssh/new |
+| `GitHub does not know your SSH key` | `1337-setup` |
+| `not on GitHub; create it, private and empty: <link>` | open the link, click Create, `1337-login` again |
+| `does not exist, or you cannot read it` | someone else's repo: check the name, ask for access |
+| `push failed: ERROR: Permission to … denied` | a repo you cannot push to: move your changes elsewhere or drop them |
+| `Chrome did not quit` | close Chrome: its profile is being pushed |
+| `branch x not updated` | you have commits origin does not: merge by hand |

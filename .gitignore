@@ -1,6 +1,7 @@
 # Personal settings never belong in this public repository. The real file is
-# ~/42.yml; this only stops a stray copy from being committed.
-42.yml
+# ~/1337.yml; this only stops a stray copy from being committed.
+1337.yml
+1337.yml.bak
 .env
 
 # Python bytecode
