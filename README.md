@@ -197,8 +197,9 @@ key to paste at `github.com/settings/ssh/new`.
   tools      install code, node …     ☑ pick     extensions  save the list of VS Code extensions
   chrome     quit Chrome, first time only        push        commit + push synced and repos
   vscode     quit VS Code, first time only       unlink      remove the symlinks from $HOME
-  synced     clone + link Chrome, VS Code        docker      stop docker, delete its images
-  repos      clone your code          ☑ pick     wipe        empty /goinfre/$USER, except docker/
+  synced     clone + link Chrome, VS Code        workspace   remove ~/Desktop/workspace (a link only)
+  repos      clone your code          ☑ pick     docker      stop docker, delete its images
+  workspace  ~/Desktop/workspace ─▶ your repos   wipe        empty /goinfre/$USER, except docker/
   extensions install VS Code extensions ☑ pick
 ```
 

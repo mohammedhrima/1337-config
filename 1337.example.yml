@@ -265,6 +265,11 @@ login:
     repos:
         do: clone
         choose: true
+    workspace:                            # ~/Desktop/workspace: your repos on goinfre, one click away
+        run:
+            - '[ ! -e "$HOME/Desktop/workspace" ] || [ -L "$HOME/Desktop/workspace" ] || { echo "~/Desktop/workspace is a real folder: left alone"; exit 0; }'
+            - mkdir -p "$HOME/Desktop" "$WORKSPACE"
+            - ln -sfn "$WORKSPACE" "$HOME/Desktop/workspace"
     extensions:
         choose: true
         options:
@@ -300,6 +305,9 @@ logout:
         message: autosync on logout
     unlink:
         do: unlink
+    workspace:                            # remove the link, never a real folder
+        run:
+            - '[ ! -L "$HOME/Desktop/workspace" ] || rm "$HOME/Desktop/workspace"'
     docker:
         run:
             - docker ps -q | xargs -r docker stop -t 10
