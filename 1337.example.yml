@@ -251,6 +251,12 @@ login:
             - pkill -x chrome || true
             - for second in $(seq 20); do pgrep -x chrome > /dev/null || exit 0; sleep 1; done
             - echo 'Chrome did not quit; close it, then try again'; exit 1
+    chrome-launcher:                      # some posts' dock Chrome is the Flatpak one, with its own empty profile
+        run:
+            - '[ -f /var/lib/flatpak/exports/share/applications/com.google.Chrome.desktop ] || exit 0'
+            - '[ -f /usr/share/applications/com.google.Chrome.desktop ] || exit 0'
+            - mkdir -p "$HOME/.local/share/applications"
+            - cp /usr/share/applications/com.google.Chrome.desktop "$HOME/.local/share/applications/"
     vscode:                               # the first time, the vscode-config link replaces VS Code's folder
         run:
             - '[ ! -L "$HOME/.config/Code/User" ] || exit 0'
