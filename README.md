@@ -199,6 +199,7 @@ key to paste at `github.com/settings/ssh/new`.
   chrome-launcher  dock Chrome = your profile
   vscode     quit VS Code, first time only       unlink      remove the symlinks from $HOME
   synced     clone + link Chrome, VS Code        workspace   remove ~/Desktop/workspace (a link only)
+  chrome-lock  drop another machine's Chrome lock
   repos      clone your code          ☑ pick     docker      stop docker, delete its images
   workspace  ~/Desktop/workspace ─▶ your repos   wipe        empty /goinfre/$USER, except docker/
   extensions install VS Code extensions ☑ pick
@@ -532,7 +533,7 @@ Signed in, the next `1337-login` creates the repo on GitHub, private. Add
 </details>
 
 <details>
-<summary><b>.gitignore</b> for a Chrome profile repo you made before (a new one gets it by itself)</summary>
+<summary><b>.gitignore</b> for a Chrome profile repo you made before (logout now adds it by itself when it is missing)</summary>
 
 ```gitignore
 /*
@@ -684,4 +685,5 @@ A mistake in `~/1337.yml` stops everything before it starts, with where it is:
 | `does not exist, or you cannot read it` | someone else's repo: check the name, ask for access |
 | `push failed: ERROR: Permission to … denied` | a repo you cannot push to: move your changes elsewhere or drop them |
 | `Chrome did not quit` | close Chrome: its profile is being pushed |
+| Chrome does not open after login | the profile came with another machine's lock: add the `chrome-lock` step from `1337.example.yml` to `~/1337.yml`; the next logout pushes it without the lock |
 | `branch x not updated` | you have commits origin does not: merge by hand |

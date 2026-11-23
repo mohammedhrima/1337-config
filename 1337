@@ -1238,10 +1238,18 @@ def start_empty_repo(name: str, item: dict, repo: Path) -> bool:
         link.rmdir()                      # empty now; the symlink takes its place
         note("✔", GREEN, name, f"the new repo took in everything from {short(link)}")
 
-    ignore = repo / ".gitignore"
-    if "gitignore" in item and not (ignore.is_symlink() or ignore.exists()):
-        ignore.write_text("\n".join(item["gitignore"]) + "\n", encoding="utf-8")
+    if write_gitignore(item, repo):
         note("✔", GREEN, name, "the new repo starts with its .gitignore")
+    return True
+
+
+def write_gitignore(item: dict, repo: Path) -> bool:
+    """Write the item's `gitignore` lines as the repo's .gitignore, unless it
+    already has one. True when it was written."""
+    ignore = repo / ".gitignore"
+    if "gitignore" not in item or ignore.is_symlink() or ignore.exists():
+        return False
+    ignore.write_text("\n".join(item["gitignore"]) + "\n", encoding="utf-8")
     return True
 
 
@@ -1377,10 +1385,18 @@ def push_squashed(name: str, item: dict, message: str) -> bool:
                    repo).stdout.strip()
         branch = head.removeprefix("origin/") or NEW_REPO_BRANCH
 
+    # A repo that lost its .gitignore would commit everything, like Chrome's
+    # SingletonLock, which then stops Chrome on the next machine.
+    if write_gitignore(item, repo):
+        note("✔", GREEN, name, "its missing .gitignore is back")
+
     # A new repo has no history to replace: its first commit is already alone.
+    # Emptying the index first leaves out files that were committed before
+    # the .gitignore ignored them.
     start_over = [["checkout", "--quiet", "--orphan", SQUASH_BRANCH]] \
         if has_commits(repo) else []
     for command in (*start_over,
+                    ["rm", "-r", "--cached", "--quiet", "--ignore-unmatch", "."],
                     ["add", "-A"],
                     ["commit", "--quiet", "--allow-empty", "-m", message],
                     ["branch", "--quiet", "-M", branch],
@@ -1931,6 +1947,8 @@ def without_repo(text: str, name: str) -> str:
 #: login and logout steps that only make sense with one synced item.
 STEPS_WITH = {
     "chrome": "google-cache",
+    "chrome-launcher": "google-cache",
+    "chrome-lock": "google-cache",
     "vscode": "vscode-config",
     "extensions": "vscode-config",
 }
