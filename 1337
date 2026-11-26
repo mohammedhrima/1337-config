@@ -1396,7 +1396,7 @@ def push_squashed(name: str, item: dict, message: str) -> bool:
     start_over = [["checkout", "--quiet", "--orphan", SQUASH_BRANCH]] \
         if has_commits(repo) else []
     for command in (*start_over,
-                    ["rm", "-r", "--cached", "--quiet", "--ignore-unmatch", "."],
+                    ["rm", "-r", "-f", "--cached", "--quiet", "--ignore-unmatch", "."],
                     ["add", "-A"],
                     ["commit", "--quiet", "--allow-empty", "-m", message],
                     ["branch", "--quiet", "-M", branch],
